@@ -427,7 +427,7 @@ func (p *PriorityQueue) AddUnschedulableIfNotPresent(pInfo *framework.QueuedPodI
 	p.PodNominator.AddNominatedPod(pInfo.PodInfo, nil)
 	return nil
 }
-
+//将backoff队列中的node信息放入active队列，backoff queue为调度失败队列
 // flushBackoffQCompleted Moves all pods from backoffQ which have completed backoff in to activeQ
 func (p *PriorityQueue) flushBackoffQCompleted() {
 	p.lock.Lock()
@@ -755,6 +755,7 @@ func (p *PriorityQueue) newQueuedPodInfo(pod *v1.Pod, plugins ...string) *framew
 }
 
 // getBackoffTime returns the time that podInfo completes backoff
+// pod加入调度队列的时间加上调度失败产生的时间
 func (p *PriorityQueue) getBackoffTime(podInfo *framework.QueuedPodInfo) time.Time {
 	duration := p.calculateBackoffDuration(podInfo)
 	backoffTime := podInfo.Timestamp.Add(duration)
@@ -767,7 +768,7 @@ func (p *PriorityQueue) calculateBackoffDuration(podInfo *framework.QueuedPodInf
 	duration := p.podInitialBackoffDuration
 	for i := 1; i < podInfo.Attempts; i++ {
 		// Use subtraction instead of addition or multiplication to avoid overflow.
-		if duration > p.podMaxBackoffDuration-duration {
+		if duration > p.podMaxBackoffDuration - duration{
 			return p.podMaxBackoffDuration
 		}
 		duration += duration
