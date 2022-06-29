@@ -443,6 +443,7 @@ func (p *PriorityQueue) flushBackoffQCompleted() {
 		if boTime.After(p.clock.Now()) {
 			break
 		}
+		//pod创建的时间加上调度失败的时间如果已经超过当前时间，会放入activeQ，scheduleOne会从activeQ中取出重新进行调度
 		_, err := p.podBackoffQ.Pop()
 		if err != nil {
 			klog.ErrorS(err, "Unable to pop pod from backoff queue despite backoff completion", "pod", klog.KObj(pod))
@@ -460,6 +461,7 @@ func (p *PriorityQueue) flushBackoffQCompleted() {
 
 // flushUnschedulablePodsLeftover moves pods which stay in unschedulablePods
 // longer than podMaxInUnschedulablePodsDuration to backoffQ or activeQ.
+//将无法调度的pod重新迁回backoff或active队列
 func (p *PriorityQueue) flushUnschedulablePodsLeftover() {
 	p.lock.Lock()
 	defer p.lock.Unlock()
